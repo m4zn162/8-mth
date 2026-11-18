@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Our 8 Months 💕</title>
+<style>
+:root{--bg:#f6eef2;--pink:#ff5c8a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0a14}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);font-family:system-ui,-apple-system,sans-serif;display:flex;justify-content:center;color:#fff}
+#wrap{position:relative;width:100%;max-width:480px;height:100%;overflow:hidden;background:#000}
+#gl{position:absolute;inset:0;width:100%;height:100%}
+#s{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:14px;padding:16px 16px 28px;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.55)}
+#s.mid{justify-content:center}
+.tag{position:absolute;top:14px;left:0;right:0;font-size:.95rem;letter-spacing:.08em}
+.say{background:rgba(255,255,255,.93);color:#3a1f2b;border-radius:16px;padding:10px 16px;max-width:94%;min-height:44px;font-size:1.05rem;text-shadow:none}
+.say.w{background:none;color:#fff;font-size:1.3rem}
+.choices{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
+button{font:inherit;border:0;border-radius:999px;background:var(--pink);color:#fff;padding:12px 22px;font-size:1.05rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+button:active{transform:scale(.96)}
+input{font:inherit;padding:12px 16px;border-radius:999px;border:2px solid var(--pink);width:60%;text-align:center;font-size:1.05rem}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.phone{width:270px;background:#fff;color:#222;border:7px solid #111;border-radius:30px;padding:14px;min-height:230px;text-align:left;text-shadow:none}
+.hd{font-weight:700;border-bottom:1px solid #ddd;padding-bottom:8px;margin-bottom:10px}
+.bub{background:#e9e9ef;border-radius:16px;padding:10px 14px;margin:6px 0;display:inline-block;max-width:85%}
+.bub.me{background:#ff5c8a;color:#fff;float:right}.tms{font-size:.7rem;color:#888}
+.note{position:absolute;top:22%;background:#fff7a8;color:#333;padding:18px 24px;border-radius:4px;transform:rotate(-4deg);box-shadow:0 8px 20px rgba(0,0,0,.5);font:700 1.4rem cursive,system-ui;animation:pop .3s;z-index:5;text-shadow:none}
+@keyframes pop{from{transform:scale(.5) rotate(-4deg);opacity:0}}
+.ff{font-size:3rem;animation:pulse .5s infinite alternate}@keyframes pulse{to{transform:scale(1.25)}}
+.call{background:rgba(42,34,66,.9);border-radius:24px;padding:22px 34px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.av{font-size:3.4rem}.timer{font-size:2.2rem;font-variant-numeric:tabular-nums;color:#7dffa6}
+.big{font-size:4.5rem}
+.fin{position:absolute;top:10%;left:0;right:0;font-size:1.9rem;font-family:Georgia,serif;color:#ffc2d9;text-shadow:0 2px 12px rgba(0,0,0,.45);opacity:0;transition:opacity 2.5s;line-height:1.4}
+.fin.on{opacity:1}
+.conf{position:absolute;top:-30px;animation:fall linear forwards;font-size:1.6rem;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh)}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="wrap"><canvas id="gl"></canvas><div id="s"></div></div>
+<script>
+/* ===== EDIT ME ===== */
+var FUTURE = "A few months later…";   // put the real future date here
+/* =================== */
+var el=function(i){return document.getElementById(i)},S=el('s'),AC=null;
+var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+if(!window.THREE){S.textContent='Could not load 3D engine. Please check your connection.';throw 0}
+
+/* ---------- 3D core ---------- */
+var R=new THREE.WebGLRenderer({canvas:el('gl'),antialias:true});R.shadowMap.enabled=true;
+var SC=new THREE.Scene(),CAM=new THREE.PerspectiveCamera(55,1,.1,100),root=new THREE.Group();SC.add(root);
+var amb=new THREE.AmbientLight(0xffffff,.65),dl=new THREE.DirectionalLight(0xffffff,.8);
+dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);var sc=dl.shadow.camera;sc.left=-7;sc.right=7;sc.top=7;sc.bottom=-7;
+SC.add(amb,dl);
+var actors=[],ticks=[],cb={x:0,y:1.5,z:4},ct={x:0,y:1,z:0},clock=new THREE.Clock();
+function resize(){var w=el('wrap').clientWidth,h=el('wrap').clientHeight;R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(w,h,false);CAM.aspect=w/h;CAM.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+function loop(){requestAnimationFrame(loop);var dt=clock.getDelta(),t=clock.elapsedTime;
+  for(var i=ticks.length-1;i>=0;i--)if(ticks[i](t,dt)===false)ticks.splice(i,1);
+  actors.forEach(function(a){a.head.rotation.x+=(Math.sin(t*1.6+a.userData.ph)*.03-a.userData.hx)*1;a.userData.hx=Math.sin(t*1.6+a.userData.ph)*.03;a.children[0].scale.y=1+Math.sin(t*2+a.userData.ph)*.012});
+  CAM.position.set(cb.x+Math.sin(t*.3)*.22,cb.y+Math.sin(t*.2)*.05,cb.z);CAM.lookAt(ct.x,ct.y,ct.z);R.render(SC,CAM)}
+loop();
+function cam(x,y,z,tx,ty,tz,w){var need=(w/2+.4)/(Math.tan(CAM.fov*Math.PI/360)*CAM.aspect);cb={x:x,y:y,z:Math.max(z,need)};ct={x:tx,y:ty,z:tz}}
+function lite(a,ai,d,di,x,y,z){amb.color.set(a);amb.intensity=ai;dl.color.set(d);dl.intensity=di;dl.position.set(x,y,z)}
+function M(g,c,x,y,z,p){var m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:c,roughness:.8}));m.position.set(x||0,y||0,z||0);m.castShadow=m.receiveShadow=true;(p||root).add(m);return m}
+function tw(ms,f){return new Promise(function(r){var s=performance.now();(function k(){var p=Math.min(1,(performance.now()-s)/ms);f(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2);p<1?requestAnimationFrame(k):r()})()})}
+function hearts(x,y,z){for(var i=0;i<9;i++)(function(){var m=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshBasicMaterial({color:0xff5c8a,transparent:true}));m.position.set(x+Math.random()*.7-.35,y,z+Math.random()*.4);root.add(m);var v=.7+Math.random()*.8,l=0;ticks.push(function(t,dt){l+=dt;m.position.y+=v*dt;m.material.opacity=Math.max(0,1-l/2);if(l>2){root.remove(m);return false}})})()}
+
+function person(o){
+  var g=new THREE.Group(),sm=[];
+  sm.push(M(new THREE.CylinderGeometry(.34,.42,.95,20),o.shirt,0,.5,0,g));
+  var h=new THREE.Group();h.position.set(0,1.28,0);g.add(h);
+  M(new THREE.SphereGeometry(.3,24,20),o.skin,0,0,0,h);
+  var hr=M(new THREE.SphereGeometry(.33,24,20),o.hair,0,.04,-.05,h);hr.scale.set(1,.92,1);
+  if(o.long)M(new THREE.CylinderGeometry(.3,.27,.8,16),o.hair,0,-.34,-.13,h);
+  M(new THREE.SphereGeometry(.035,8,8),0x222222,-.11,.02,.28,h);M(new THREE.SphereGeometry(.035,8,8),0x222222,.11,.02,.28,h);
+  var sm2=M(new THREE.TorusGeometry(.07,.014,6,12,Math.PI),0x8a2f3f,0,-.08,.285,h);sm2.rotation.z=Math.PI;
+  function arm(sx){var p=new THREE.Group();p.position.set(sx*.42,.88,0);g.add(p);sm.push(M(new THREE.CylinderGeometry(.07,.07,.8,10),o.shirt,0,-.4,0,p));M(new THREE.SphereGeometry(.085,10,10),o.skin,0,-.82,0,p);return p}
+  g.armL=arm(-1);g.armR=arm(1);g.head=h;g.sm=sm;g.userData={ph:Math.random()*6,hx:0};
+  g.scale.setScalar(o.s||1);actors.push(g);root.add(g);return g}
+function paint(p,c){p.sm.forEach(function(m){m.material.color.set(c)})}
+var P={
+  mazen:function(){return person({skin:0xf1c9a5,shirt:0x3a6ea5,hair:0x2b1b12})},
+  jana:function(){return person({skin:0xf5d0b5,shirt:0xff7aa2,hair:0x4a2a1a,long:1})},
+  ext:function(s,sh,hr,lg){return person({skin:s,shirt:sh,hair:hr,long:lg})}
+};
+function gradTex(){var c=document.createElement('canvas');c.width=2;c.height=256;var x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,256);
+  g.addColorStop(0,'#3a2260');g.addColorStop(.35,'#c24b86');g.addColorStop(.55,'#ff8c6b');g.addColorStop(1,'#ffd27a');x.fillStyle=g;x.fillRect(0,0,2,256);return new THREE.CanvasTexture(c)}
+
+/* ---------- worlds ---------- */
+function room(wall,floor){M(new THREE.BoxGeometry(18,6,.2),wall,0,3,-3);M(new THREE.BoxGeometry(18,.1,12),floor,0,-.05,1)}
+var B={
+  black:function(){SC.background=new THREE.Color(0);lite(0,0,0,0,0,1,1)},
+  night:function(){SC.background=new THREE.Color(0x1b1630);lite(0xffffff,.8,0xffc0dd,.5,2,5,4);
+    var hs=[];for(var i=0;i<38;i++){var m=new THREE.Mesh(new THREE.SphereGeometry(.08+Math.random()*.1,10,10),new THREE.MeshBasicMaterial({color:i%2?0xff5c8a:0xffa6c9,transparent:true,opacity:.8}));m.position.set(Math.random()*10-5,Math.random()*7-1,Math.random()*-4);m.userData.v=.2+Math.random()*.5;root.add(m);hs.push(m)}
+    ticks.push(function(t,dt){hs.forEach(function(m){m.position.y+=m.userData.v*dt;if(m.position.y>6.5)m.position.y=-1})});
+    cam(0,1.2,6,0,1.2,0,4)},
+  rest:function(){SC.background=new THREE.Color(0xffd9a8);lite(0xfff0dd,.7,0xffe2b8,.8,3,6,5);room(0xf2c9a0,0xc98a5e);
+    M(new THREE.CylinderGeometry(1,1,.08,32),0x8a5a3a,0,.86,0);M(new THREE.CylinderGeometry(.12,.2,.86,12),0x6a3f28,0,.43,0);
+    M(new THREE.CylinderGeometry(.3,.3,.03,24),0xffffff,0,.92,0);var p=M(new THREE.TorusGeometry(.13,.06,8,20),0xf3c13a,0,.97,0);p.rotation.x=Math.PI/2;
+    var s=M(new THREE.SphereGeometry(.1,12,12),0xd9342b,0,1.02,0);s.scale.y=.6},
+  home:function(tab){SC.background=new THREE.Color(0xf9e3c4);lite(0xfff0dd,.7,0xffe2b8,.8,3,6,5);room(0xf1d2a6,0xb98a5e);
+    if(tab)M(new THREE.BoxGeometry(tab,.1,1.3),0x8a5a3a,tab>5?0:-.9,.86,0)},
+  beach:function(){SC.background=gradTex();lite(0xffb08a,.6,0xff9a6a,1.1,0,3,-8);
+    M(new THREE.PlaneGeometry(60,16),0xf2d49b,0,0,3).rotation.x=-Math.PI/2;
+    var sea=M(new THREE.PlaneGeometry(60,30,30,14),0x2b4a7a,0,.05,-17);sea.rotation.x=-Math.PI/2;sea.position.z=-17;sea.receiveShadow=false;
+    var sun=new THREE.Mesh(new THREE.SphereGeometry(1.8,24,24),new THREE.MeshBasicMaterial({color:0xfff1b0}));sun.position.set(0,2.6,-20);root.add(sun);
+    var gl=new THREE.Mesh(new THREE.SphereGeometry(3.2,24,24),new THREE.MeshBasicMaterial({color:0xffc27a,transparent:true,opacity:.25}));gl.position.copy(sun.position);root.add(gl);
+    var st=new THREE.Mesh(new THREE.PlaneGeometry(2.6,16),new THREE.MeshBasicMaterial({color:0xffcf8a,transparent:true,opacity:.5}));st.rotation.x=-Math.PI/2;st.position.set(0,.12,-10);root.add(st);
+    var pos=sea.geometry.attributes.position;
+    ticks.push(function(t){for(var i=0;i<pos.count;i++){var x=pos.getX(i),y=pos.getY(i);pos.setZ(i,Math.sin(x*.4+t*1.4+y*.8)*.1)}pos.needsUpdate=true;st.material.opacity=.4+Math.sin(t*3)*.1})}
+};
+function scene(w,h,mid){while(root.children.length)root.remove(root.children[0]);actors.length=0;ticks.length=0;B[w.split(':')[0]](w.split(':')[1]&&+w.split(':')[1]);S.className=mid?'mid':'';S.innerHTML=h}
+
+/* ---------- helpers & audio ---------- */
+function say(t){var d=el('say');if(d)d.textContent=t}
+function pick(labels){return new Promise(function(res){var d=document.createElement('div');d.className='choices';labels.forEach(function(t,i){var b=document.createElement('button');b.textContent=t;b.onclick=function(){d.remove();res(i)};d.appendChild(b)});S.appendChild(d)})}
+function ask(ph,ans){return new Promise(function(res){var d=document.createElement('div');d.className='choices';d.innerHTML='<input placeholder="'+ph+'" autocomplete="off"><button>OK</button>';var i=d.querySelector('input'),b=d.querySelector('button');b.onclick=function(){if(i.value.trim().toLowerCase()===ans){d.remove();res()}else{beep(200,.25,'square');d.classList.add('shake');setTimeout(function(){d.classList.remove('shake')},400)}};i.addEventListener('keydown',function(e){if(e.key==='Enter')b.click()});S.appendChild(d)})}
+function beep(f,d,t,v){try{var o=AC.createOscillator(),g=AC.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.value=v||.15;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+function slapSnd(){try{var n=AC.sampleRate*.15,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(var i=0;i<n;i++)a[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);var s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start()}catch(e){}}
+/* Baby cry: pitch contour + vibrato + infant "waaah" formants + breath noise + gasp between wails */
+function cry(){try{
+  var nb=AC.createBuffer(1,AC.sampleRate*1.5,AC.sampleRate),nd=nb.getChannelData(0);for(var i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  var cv=new Float32Array(256);for(i=0;i<256;i++)cv[i]=Math.tanh((i/128-1)*2.2);
+  var out=AC.createGain();out.gain.value=.9;out.connect(AC.destination);
+  function noise(t,len,fr,q,a,f2){var n=AC.createBufferSource();n.buffer=nb;var f=AC.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(fr,t);if(f2)f.frequency.linearRampToValueAtTime(f2,t+len);f.Q.value=q;var g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a,t+len*.4);g.gain.linearRampToValueAtTime(0,t+len);n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+len+.05)}
+  for(var k=0;k<3;k++)(function(t){
+    var o=AC.createOscillator();o.type='sawtooth';var f=o.frequency;f.setValueAtTime(330,t);f.linearRampToValueAtTime(590,t+.16);f.linearRampToValueAtTime(520,t+.55);f.linearRampToValueAtTime(400,t+1);
+    var v=AC.createOscillator(),vg=AC.createGain();v.frequency.value=9+Math.random()*3;vg.gain.value=16;v.connect(vg);vg.connect(f);
+    var env=AC.createGain();env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(.55,t+.05);env.gain.setValueAtTime(.5,t+.7);env.gain.linearRampToValueAtTime(0,t+1.05);env.connect(out);
+    var sh=AC.createWaveShaper();sh.curve=cv;o.connect(sh);
+    [[1100,800,9,1],[2300,2000,10,.7],[3400,3300,12,.4]].forEach(function(F){var bp=AC.createBiquadFilter();bp.type='bandpass';bp.Q.value=F[2];bp.frequency.setValueAtTime(F[0],t);bp.frequency.linearRampToValueAtTime(F[1],t+1);var g=AC.createGain();g.gain.value=F[3];sh.connect(bp);bp.connect(g);g.connect(env)});
+    noise(t,1,2600,.8,.12);noise(t+1.08,.25,1200,2,.18,2800);
+    o.start(t);v.start(t);o.stop(t+1.1);v.stop(t+1.1)
+  })(AC.currentTime+.05+k*1.45)
+}catch(e){}}
+function confetti(n){var e=['💖','💕','✨','🌸'];for(var i=0;i<n;i++){var s=document.createElement('span');s.className='conf';s.textContent=e[i%4];s.style.left=Math.random()*95+'%';s.style.animationDuration=(2+Math.random()*2)+'s';S.appendChild(s)}}
+
+/* ---------- story ---------- */
+async function intro(){
+  scene('night','<div class="big">💕</div><h1>Our 8 Months</h1><p>A game for Jana</p><div class="choices"><button id="go">Play</button></div>',true);
+  await new Promise(function(r){el('go').onclick=function(){AC=new (window.AudioContext||window.webkitAudioContext)();r()}});
+  scene('night','<div class="ff">⏪</div><h2>Fast forward to March 18…</h2>',true);
+  await sleep(2600);
+}
+async function textScene(){
+  scene('night','<div class="tag">March 18 · 9:03 PM</div><div class="phone"><div class="hd">Mazen 💙</div><div id="chat"></div></div>',true);
+  await sleep(900);
+  el('chat').innerHTML='<div class="bub">Mazen is typing…</div>';await sleep(1400);
+  el('chat').innerHTML='<div class="bub">I love you ❤️</div><div class="tms">9:03 PM</div>';beep(880,.2);
+  while(true){
+    var c=await pick(["I love you too ❤️","I don’t love you"]);
+    if(c===0)break;
+    beep(180,.5,'sawtooth');
+    var n=document.createElement('div');n.className='note';n.textContent='📝 Choose correctly';S.appendChild(n);
+    await sleep(1700);n.remove();
+  }
+  el('chat').innerHTML+='<br><div class="bub me">I love you too ❤️</div>';beep(1040,.25);
+  await sleep(1800);
+}
+function fmt(s){s=Math.floor(s);return Math.floor(s/3600)+':'+('0'+Math.floor(s%3600/60)).slice(-2)+':'+('0'+s%60).slice(-2)}
+async function calls(){
+  var dates=["March 18","March 19","March 21","March 24","April 2","April 20","May 11"];
+  for(var d=0;d<dates.length;d++){
+    scene('night','<div class="ff">⏩</div><div class="tag">'+dates[d]+'</div><div class="call"><div class="av">🧑</div><b>Mazen 💙</b><div class="timer" id="tmr">0:00:00</div></div>',true);
+    var target=5400+Math.random()*5400;
+    for(var k=1;k<=24;k++){el('tmr').textContent=fmt(target*k/24);await sleep(35)}
+    el('tmr').style.color='#ff8c8c';el('tmr').textContent=fmt(target)+' · ended';
+    beep(400,.15);await sleep(350);
+  }
+  scene('night','<h1>'+FUTURE+'</h1>',true);
+  await sleep(2400);
+}
+async function restaurant(){
+  while(true){
+    scene('rest','<div class="tag">'+FUTURE+' · Dinner</div><div class="say" id="say"></div>');
+    var m=P.mazen(),j=P.jana();m.position.set(-.5,0,0);m.rotation.y=Math.PI/2;j.position.set(.5,0,0);j.rotation.y=-Math.PI/2;
+    M(new THREE.CylinderGeometry(.012,.012,.3,6),0xcccccc,0,-.97,0,m.armL);
+    var pa=M(new THREE.TorusGeometry(.07,.04,8,12),0xf3c13a,0,-1.14,0,m.armL);pa.rotation.x=Math.PI/2;
+    m.armL.rotation.x=-.3;cam(0,1.55,3.2,0,.85,0,2.8);
+    say("Mazen: Open up, Jana 🍝 Let me feed you…");
+    await tw(1200,function(p){m.armL.rotation.x=-.3-1.7*p});
+    var c=await pick(["Eat 😋","Slap Mazen 🖐️"]);
+    if(c===0){beep(660,.2);hearts(0,1.6,.3);await tw(600,function(p){j.head.rotation.x=.3*p});say("Jana: Mmm… so good 😋💕");confetti(10);await sleep(2300);return}
+    await tw(260,function(p){j.armR.rotation.x=-.3-1.9*p});
+    slapSnd();say("*SLAP!* 💢");
+    await tw(220,function(p){m.head.rotation.y=-1.2*p;m.position.z=.12*p});
+    await sleep(900);say("Mazen: It’s okay, I still love you 🥹");
+    await tw(900,function(p){m.head.rotation.y=-1.2*(1-p);m.position.z=.12*(1-p);j.armR.rotation.x=-2.2*(1-p)});
+    await sleep(1200);say("Mazen: Here, try again 🍝");await sleep(1400);
+  }
+}
+function family(){
+  var xs=[-2.5,-1.5,-.5,.5,1.5,2.5],a=[
+    P.ext(0xe8b894,0x6b8e5a,0x222222,0),P.ext(0xf0c8a8,0xb5651d,0x5a3825,1),P.jana(),P.mazen(),
+    P.ext(0xd9a982,0x7a4f9a,0xdddddd,0),P.ext(0xf0c8a8,0xc0392b,0xcccccc,1)];
+  a.forEach(function(p,i){p.position.set(xs[i],0,-.85)});return a}
+async function families(){
+  while(true){
+    scene('home:6.4','<div class="tag">Both families, one table</div><div class="say" id="say"></div>');
+    var a=family();cam(0,1.7,4,0,.8,0,6.4);
+    say("Our parents: So… we’re here to talk about marriage.");
+    await sleep(2400);
+    await tw(700,function(p){a[3].head.rotation.y=-.8*p;a[2].head.rotation.y=.8*p});
+    say("Mazen: Jana… will you marry me? 💍");await sleep(600);
+    var c=await pick(["Accept 💍","Not yet"]);
+    if(c===0)return;
+    await tw(500,function(p){a[3].head.rotation.x=.4*p});
+    say("Mazen: It’s fine, I’ll ask again tomorrow 🙂");await sleep(2400);
+    scene('night','<div class="ff">⏩</div><h2>The next day…</h2>',true);await sleep(1600);
+  }
+}
+function ring(arm){var r=M(new THREE.TorusGeometry(.07,.018,8,16),0xffd24a,0,-.82,0,arm);r.material.emissive.set(0x886600);r.visible=false;return r}
+async function rings(){
+  scene('home:0','<div class="say" id="say"></div>');
+  var m=P.mazen(),j=P.jana();m.position.set(-.7,0,0);m.rotation.y=Math.PI/2;j.position.set(.7,0,0);j.rotation.y=-Math.PI/2;
+  var rj=ring(j.armR),rm=ring(m.armL);cam(0,1.4,3,0,1.15,0,2.6);
+  say("Mazen puts the ring on Jana’s finger 💍");
+  await tw(1100,function(p){m.armL.rotation.x=-1.6*p;j.armR.rotation.x=-1.6*p});
+  rj.visible=true;beep(1040,.3);hearts(0,1.3,.2);await sleep(1400);
+  await tw(700,function(p){m.armL.rotation.x=-1.6*(1-p);j.armR.rotation.x=-1.6*(1-p)});
+  say("Jana puts the ring on Mazen’s finger 💍");
+  await tw(1100,function(p){m.armL.rotation.x=-1.6*p;j.armR.rotation.x=-1.6*p});
+  rm.visible=true;beep(1240,.3);hearts(0,1.3,.2);await sleep(1400);
+  paint(m,0x22223a);paint(j,0xffffff);
+  await tw(1500,function(p){m.position.x=-.7+.3*p;j.position.x=.7-.3*p;m.armL.rotation.x=-1.6*(1-p);j.armR.rotation.x=-1.6*(1-p)});
+  say("💞 Forever 💞");confetti(30);
+  ticks.push(function(t){m.position.y=Math.abs(Math.sin(t*3))*.08;j.position.y=Math.abs(Math.sin(t*3+.5))*.08});
+  cam(0,1.5,3.4,0,1.1,0,2.4);for(var i=0;i<4;i++){hearts(0,1.8,.2);await sleep(900)}
+  scene('black','');await sleep(1400);
+}
+async function babies(){
+  var kids=[["boy","It’s a boy 👶","zayn"],["girl","It’s a girl 👶","maya"],["boy","It’s a boy 👶","adam"]];
+  for(var i=0;i<kids.length;i++){
+    scene('black','<div class="say w" id="say"></div>',true);
+    cry();await sleep(2600);
+    say(kids[i][1]+" — what should we name "+(kids[i][0]==='boy'?'him':'her')+"?");
+    await ask("Type the name…",kids[i][2]);
+    var n=kids[i][2];say(n[0].toUpperCase()+n.slice(1)+" 💖");await sleep(2200);
+  }
+}
+async function table(){
+  scene('home:5.2','<div class="tag">Years later…</div><div class="say" id="say"></div>');
+  var k=[P.ext(0xf1c9a5,0x4a90d9,0x2b1b12,0),P.ext(0xf5d0b5,0xff9ac2,0x4a2a1a,1),P.ext(0xf1c9a5,0x4caf50,0x7a4a22,0)],
+      xs=[-2.7,-1.9,-1.1],j=P.jana(),m=P.mazen();
+  k.forEach(function(p,i){p.scale.setScalar(.72);p.position.set(xs[i],.25,-.85)});
+  j.position.set(-.1,0,-.85);m.position.set(.9,0,-.85);cam(-.8,1.6,4.2,-.8,.75,0,5);
+  await sleep(1800);
+  say("Jana looks at the kids… 👀");
+  await tw(1000,function(p){j.head.rotation.y=-.9*p});await sleep(1500);
+  say("…then at Mazen 🥰");
+  await tw(1000,function(p){j.head.rotation.y=-.9+1.8*p});await sleep(900);
+  await pick(["Kiss Mazen 💋"]);
+  beep(900,.3);hearts(.4,1.7,-.5);say("💋");
+  await tw(1100,function(p){j.position.x=-.1+.22*p;m.position.x=.9-.22*p;j.head.rotation.y=.9*p;m.head.rotation.y=-.9*p;j.head.rotation.z=.1*p;m.head.rotation.z=-.1*p});
+  hearts(.4,1.6,-.5);await sleep(900);
+  say("Zayn, Maya & Adam: Eww! Stop kissing! 🤢");
+  k.forEach(function(p){p.armL.rotation.x=p.armR.rotation.x=-2.4});
+  ticks.push(function(t){k.forEach(function(p,i){p.position.y=.25+Math.abs(Math.sin(t*6+i))*.06;p.head.rotation.z=Math.sin(t*9+i)*.12})});
+  await sleep(3600);
+}
+async function ending(){
+  scene('beach','<div class="fin" id="fin">I love you Jana,<br>happy 8 months</div><div class="choices"><button id="re" style="opacity:0;transition:opacity 1s">Play again</button></div>');
+  var m=person({skin:0xf1c9a5,shirt:0x5b7fa8,hair:0xf2f2f2}),j=person({skin:0xf5d0b5,shirt:0xe58aa8,hair:0xf5f5f5,long:1});
+  m.position.set(.45,.1,0);j.position.set(-.45,.1,0);m.rotation.y=j.rotation.y=Math.PI;
+  m.armR.rotation.z=1.25;j.head.rotation.z=.32;m.head.rotation.z=-.1;
+  cam(0,1.5,3.6,0,1.25,-8,3);
+  await sleep(3000);el('fin').classList.add('on');
+  await sleep(4500);el('re').style.opacity=1;el('re').onclick=main;
+}
+async function main(){
+  await intro();await textScene();await calls();await restaurant();await families();await rings();await babies();await table();await ending();
+}
+main();
+</script>
+</body>
+</html>
